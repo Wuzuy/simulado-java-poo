@@ -94,7 +94,7 @@
 
         // Requisição para API Gemini com tentativas
         async function fetchGeminiComRetry(payload, tentativas = 5) {
-            const apiKey = ""; 
+            const apiKey = "AIzaSyACE0nLQ7JXAtNPbzX3kWkYI2tlOQywcD0"; // vou vazar a API sim
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
             const delays = [1000, 2000, 4000, 8000, 16000];
 
