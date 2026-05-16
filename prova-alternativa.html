@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prova Teórica Java - SENAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-border { border: 1px solid #ccc; break-inside: avoid; background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+    <nav class="bg-[#004a8f] dark:bg-gray-800 text-white p-4 shadow-md no-print">
+        <div class="max-w-5xl mx-auto flex flex-wrap gap-2 justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-semibold">Voltar</a>
+                <h1 class="text-xl font-bold hidden sm:block">Prova Objetiva</h1>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="toggleTheme()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-semibold">Tema</button>
+                <button onclick="window.print()" class="bg-white text-[#004a8f] dark:bg-gray-700 dark:text-white px-3 py-1 rounded font-semibold hover:bg-gray-200 transition text-sm">Imprimir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto mt-6 p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+            <h2 class="text-2xl font-bold mb-2 text-[#004a8f] dark:text-blue-400">Simulado Teórico: POO e Arquitetura Java</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6 pb-4 border-b dark:border-gray-700 no-print">Responda as 20 questões abaixo. As perguntas e alternativas foram embaralhadas.</p>
+            
+            <form id="quiz-form">
+                <div id="quiz-container" class="space-y-6"></div>
+                
+                <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <button type="button" id="btn-finalizar" onclick="finalizarProva()" class="bg-[#004a8f] dark:bg-blue-600 text-white px-8 py-3 rounded text-lg font-bold hover:bg-blue-800 transition w-full sm:w-auto">Finalizar Prova</button>
+                    <button type="button" id="btn-reiniciar" onclick="reiniciarProva()" class="bg-gray-500 text-white px-8 py-3 rounded text-lg font-bold hover:bg-gray-600 transition hidden w-full sm:w-auto">Reiniciar Questionário</button>
+                    <div id="resultado" class="text-xl font-bold hidden text-center sm:text-left"></div>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const questoesBase = [
+            { q: "Qual a função principal da JVM (Java Virtual Machine)?", options: [ { t: "Ler o bytecode e traduzi-lo para a máquina real.", c: true }, { t: "Compilar o código fonte em um arquivo .class.", c: false }, { t: "Criar a interface gráfica do usuário.", c: false }, { t: "Gerenciar o banco de dados da aplicação.", c: false } ] },
+            { q: "O JRE (Java Runtime Environment) é responsável por:", options: [ { t: "Fornecer o ambiente mínimo de execução com a JVM e bibliotecas padrão.", c: true }, { t: "Fornecer ferramentas de compilação para o desenvolvedor.", c: false }, { t: "Escrever a documentação do código fonte.", c: false }, { t: "Ocultar os dados do banco de dados.", c: false } ] },
+            { q: "A diferença principal entre o JDK e o JRE é que o JDK:", options: [ { t: "Inclui ferramentas de desenvolvimento como o compilador (javac).", c: true }, { t: "Não possui a Máquina Virtual Java.", c: false }, { t: "Serve apenas para rodar jogos em Java.", c: false }, { t: "É usado apenas por usuários finais.", c: false } ] },
+            { q: "Em Programação Orientada a Objetos, o que é um Objeto?", options: [ { t: "Uma entidade que possui características (atributos) e ações (métodos).", c: true }, { t: "Uma variável que armazena apenas números inteiros.", c: false }, { t: "O processo de compilar o código fonte.", c: false }, { t: "Um erro gerado pela máquina virtual.", c: false } ] },
+            { q: "O conceito de 'Classe' em Java pode ser definido como:", options: [ { t: "Um molde ou planta para criar objetos reais.", c: true }, { t: "A memória RAM onde o programa é executado.", c: false }, { t: "A ação realizada por um método específico.", c: false }, { t: "O arquivo final executável do Windows.", c: false } ] },
+            { q: "Os Atributos de um objeto representam:", options: [ { t: "Os dados e informações que o objeto armazena.", c: true }, { t: "As ações e rotinas que o objeto executa.", c: false }, { t: "As regras de segurança do servidor.", c: false }, { t: "As palavras reservadas do sistema.", c: false } ] },
+            { q: "Os Métodos de um objeto representam:", options: [ { t: "As funções, ações ou comportamentos do objeto.", c: true }, { t: "As informações como nome e idade.", c: false }, { t: "O código fonte que não pode ser alterado.", c: false }, { t: "As bibliotecas importadas da internet.", c: false } ] },
+            { q: "Qual o propósito da palavra-chave 'new' no Java?", options: [ { t: "Instanciar (criar) um novo objeto a partir de uma classe.", c: true }, { t: "Apagar um objeto da memória.", c: false }, { t: "Declarar um novo tipo de variável primitiva.", c: false }, { t: "Iniciar o compilador javac.", c: false } ] },
+            { q: "O pilar da Abstração na POO consiste em:", options: [ { t: "Filtrar detalhes irrelevantes e focar no que importa para o sistema.", c: true }, { t: "Esconder todo o código para evitar cópias não autorizadas.", c: false }, { t: "Permitir que uma classe herde de múltiplas classes.", c: false }, { t: "Garantir que os métodos retornem sempre o mesmo valor.", c: false } ] },
+            { q: "Ao tentar compilar o código 'String for = \"teste\";', ocorre um erro porque:", options: [ { t: "Palavras reservadas da linguagem não podem ser nomes de variáveis.", c: true }, { t: "String não pode receber o texto 'teste'.", c: false }, { t: "A variável precisa ser instanciada com 'new String'.", c: false }, { t: "Faltou a importação da biblioteca Math.", c: false } ] },
+            { q: "O que é invocado de forma automática ao criarmos um objeto com 'new'?", options: [ { t: "O método Construtor.", c: true }, { t: "O Limpador de Memória (Garbage Collector).", c: false }, { t: "O compilador javac.", c: false }, { t: "O método de destruição.", c: false } ] },
+            { q: "A função do método Construtor é:", options: [ { t: "Inicializar a memória e os atributos base do objeto criado.", c: true }, { t: "Destruir as variáveis antigas.", c: false }, { t: "Converter o projeto para executável.", c: false }, { t: "Gerar a documentação do projeto.", c: false } ] },
+            { q: "Em um sistema de biblioteca, ignorar o peso de um leitor ao fazer o cadastro é exemplo de:", options: [ { t: "Abstração.", c: true }, { t: "Polimorfismo.", c: false }, { t: "Herança.", c: false }, { t: "Compilação.", c: false } ] },
+            { q: "Qual a ferramenta do JDK responsável por transformar código em bytecode?", options: [ { t: "javac", c: true }, { t: "java", c: false }, { t: "javadoc", c: false }, { t: "jre", c: false } ] },
+            { q: "Qual o objetivo de ferramentas como o 'javadoc' no JDK?", options: [ { t: "Gerar documentação técnica baseada nos comentários do código.", c: true }, { t: "Ler o bytecode e executá-lo.", c: false }, { t: "Compactar os arquivos do projeto.", c: false }, { t: "Proteger o código contra engenharia reversa.", c: false } ] },
+            { q: "A arquitetura do Java segue uma ordem de englobamento. Qual é a correta?", options: [ { t: "O JDK engloba o JRE, que por sua vez engloba a JVM.", c: true }, { t: "A JVM engloba o JDK, que engloba o JRE.", c: false }, { t: "O JRE engloba o JDK e a JVM.", c: false }, { t: "Nenhum engloba o outro, são programas distintos.", c: false } ] },
+            { q: "Uma placa de carro 'ABC-1234' em um sistema representa:", options: [ { t: "O estado de um atributo de um objeto.", c: true }, { t: "A chamada de um método estático.", c: false }, { t: "A definição da classe Carro.", c: false }, { t: "Uma palavra reservada do Java.", c: false } ] },
+            { q: "Qual comando executa uma aplicação Java compilada?", options: [ { t: "java", c: true }, { t: "javac", c: false }, { t: "javadoc", c: false }, { t: "run java", c: false } ] },
+            { q: "Como o compilador Java difere de compiladores tradicionais (como C/C++)?", options: [ { t: "Gera bytecode em vez de código nativo de máquina.", c: true }, { t: "Gera código HTML diretamente.", c: false }, { t: "Executa o programa durante a compilação.", c: false }, { t: "Exige que o programador gerencie a memória manualmente.", c: false } ] },
+            { q: "Na criação de uma classe 'ContaBancaria', a ação 'sacar' deve ser classificada como:", options: [ { t: "Método.", c: true }, { t: "Atributo.", c: false }, { t: "Objeto.", c: false }, { t: "Construtor.", c: false } ] }
+        ];
+
+        // Aleatoriza a ordem de um array
+        function shuffle(array) {
+            let currentIndex = array.length, randomIndex;
+            while (currentIndex !== 0) {
+                randomIndex = Math.floor(Math.random() * currentIndex);
+                currentIndex--;
+                [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+            }
+            return array;
+        }
+
+        function renderizarProva() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+            
+            const questoesEmbaralhadas = shuffle([...questoesBase]);
+
+            questoesEmbaralhadas.forEach((q, index) => {
+                const opcoesEmbaralhadas = shuffle([...q.options]);
+                let htmlOpcoes = '';
+
+                opcoesEmbaralhadas.forEach((opt) => {
+                    const isCorrect = opt.c ? "true" : "false";
+                    htmlOpcoes += `
+                        <label class="block p-3 border rounded border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition option-label">
+                            <input type="radio" name="q${index}" value="${isCorrect}" class="mr-2 accent-[#004a8f] dark:accent-blue-400">
+                            ${opt.t}
+                        </label>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="print-border p-5 bg-gray-50 dark:bg-gray-700 rounded-lg question-block shadow-sm" id="block-${index}">
+                        <p class="font-bold mb-4 text-lg">${index + 1}. ${q.q}</p>
+                        <div class="space-y-2 text-base">
+                            ${htmlOpcoes}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function finalizarProva() {
+            const blocks = document.querySelectorAll('.question-block');
+            let acertos = 0;
+
+            blocks.forEach((block, index) => {
+                const labels = block.querySelectorAll('.option-label');
+                const radios = block.querySelectorAll(`input[name="q${index}"]`);
+                let selecionado = false;
+                
+                radios.forEach(r => r.disabled = true);
+
+                labels.forEach(label => {
+                    const radio = label.querySelector('input');
+                    label.classList.remove('hover:bg-gray-50', 'dark:hover:bg-gray-700', 'cursor-pointer');
+                    
+                    if (radio.checked) {
+                        selecionado = true;
+                        if (radio.value === "true") {
+                            acertos++;
+                            label.classList.add('bg-green-100', 'dark:bg-green-900', 'border-green-500', 'text-green-800', 'dark:text-green-200', 'font-semibold');
+                        } else {
+                            label.classList.add('bg-red-100', 'dark:bg-red-900', 'border-red-500', 'text-red-800', 'dark:text-red-200', 'font-semibold');
+                        }
+                    }
+                    
+                    if (radio.value === "true" && !radio.checked) {
+                        label.classList.add('border-green-500', 'text-green-700', 'dark:text-green-400', 'font-bold');
+                    }
+                });
+
+                if (!selecionado) {
+                    block.classList.add('border-2', 'border-red-400', 'dark:border-red-600');
+                }
+            });
+
+            const resDiv = document.getElementById('resultado');
+            resDiv.innerHTML = `Acertos: <span class="${acertos >= 14 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}">${acertos} / 20</span>`;
+            resDiv.classList.remove('hidden');
+            
+            document.getElementById('btn-finalizar').classList.add('hidden');
+            document.getElementById('btn-reiniciar').classList.remove('hidden');
+            
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        }
+
+        function reiniciarProva() {
+            document.getElementById('btn-finalizar').classList.remove('hidden');
+            document.getElementById('btn-reiniciar').classList.add('hidden');
+            document.getElementById('resultado').classList.add('hidden');
+            
+            renderizarProva();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        window.onload = renderizarProva;
+    </script>
+</body>
+</html>

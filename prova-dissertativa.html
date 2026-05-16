@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prova Teórica Dissertativa - SENAI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { darkMode: 'class' };
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        }
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+        }
+    </script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; color: black !important; }
+            .print-border { border: 1px solid #ccc; break-inside: avoid; background: white !important; color: black !important; }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-100 transition-colors duration-300">
+
+    <nav class="bg-[#004a8f] dark:bg-gray-800 text-white p-4 shadow-md no-print">
+        <div class="max-w-5xl mx-auto flex flex-wrap gap-2 justify-between items-center">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-semibold">Voltar</a>
+                <h1 class="text-xl font-bold hidden sm:block">Prova Dissertativa</h1>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="toggleTheme()" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-semibold">Tema</button>
+                <button onclick="window.print()" class="bg-white text-[#004a8f] dark:bg-gray-700 dark:text-white px-3 py-1 rounded font-semibold hover:bg-gray-200 transition text-sm">Imprimir</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="max-w-5xl mx-auto mt-6 p-4">
+        <div class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 transition-colors">
+            <h2 class="text-2xl font-bold mb-2 text-[#004a8f] dark:text-blue-400">Avaliação Teórica: Respostas Abertas</h2>
+            <p class="text-gray-600 dark:text-gray-400 mb-6 pb-4 border-b dark:border-gray-700 no-print">Responda as 20 questões abaixo. A IA avaliará suas respostas.</p>
+            
+            <div id="quiz-container" class="space-y-6"></div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700 no-print flex flex-col sm:flex-row items-center justify-between gap-4">
+                <button id="btn-avaliar" onclick="avaliarProva()" class="bg-[#004a8f] dark:bg-blue-600 text-white px-8 py-3 rounded text-lg font-bold hover:bg-blue-800 transition w-full sm:w-auto">Avaliar com IA</button>
+                <div id="loading" class="hidden text-blue-600 dark:text-blue-400 font-bold text-center sm:text-left">Analisando respostas...</div>
+            </div>
+            <div id="erro-api" class="hidden text-red-600 dark:text-red-400 mt-4 font-bold border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/30 p-4 rounded text-center"></div>
+        </div>
+    </main>
+
+    <script>
+        const questoesBase = [
+            "Explique com suas palavras a diferença entre JRE e JDK.",
+            "O que é uma Classe e o que é um Objeto em Programação Orientada a Objetos?",
+            "Qual a principal responsabilidade da JVM (Java Virtual Machine)?",
+            "Explique o pilar da Abstração e dê um exemplo prático.",
+            "Para que serve o método Construtor de uma classe em Java?",
+            "Por que o código 'String for = \"xyz\";' gera um erro de compilação?",
+            "Qual a função da palavra-chave 'new' na criação de objetos?",
+            "Dê um exemplo de um Atributo e de um Método para uma classe chamada 'ContaBancaria'.",
+            "O que significa instanciar uma classe na programação?",
+            "Por que dizemos que o JRE fornece apenas o 'ambiente mínimo de execução'?",
+            "Cite duas ferramentas presentes no JDK que não estão disponíveis no JRE.",
+            "Como podemos diferenciar 'Estado' (Atributos) de 'Comportamento' (Métodos) em um objeto?",
+            "Se a JVM lê o bytecode, qual é o papel do compilador (javac) nesse processo?",
+            "O que acontece tecnicamente na memória quando utilizamos a instrução 'new'?",
+            "Explique o motivo de uma Classe ser frequentemente comparada a um 'molde' ou 'gabarito'.",
+            "Para qual perfil (desenvolvedor ou usuário final) o JRE é voltado e por quê?",
+            "Aplicando a Abstração em um sistema escolar, quais dados seriam relevantes e irrelevantes para a classe 'Aluno'?",
+            "Por que a frase 'escreva uma vez, rode em qualquer lugar' do Java depende inteiramente da JVM?",
+            "O que é o 'javadoc' e qual a sua utilidade para projetos de software?",
+            "Caso um programador tente criar uma variável chamada 'class', o que ocorrerá e qual a justificativa técnica?"
+        ];
+
+        function renderizarProva() {
+            const container = document.getElementById('quiz-container');
+            container.innerHTML = '';
+
+            questoesBase.forEach((q, index) => {
+                container.innerHTML += `
+                    <div class="print-border p-5 bg-gray-50 dark:bg-gray-700 rounded-lg question-block shadow-sm">
+                        <p class="font-bold mb-3 text-lg">${index + 1}. ${q}</p>
+                        <textarea id="resp-${index}" class="w-full p-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded focus:ring-2 focus:ring-[#004a8f] dark:focus:ring-blue-400 focus:outline-none resize-y transition-colors" rows="3" placeholder="Digite sua resposta..."></textarea>
+                        <div id="feedback-${index}" class="mt-4 hidden p-3 rounded text-sm font-medium border"></div>
+                    </div>
+                `;
+            });
+        }
+
+        // Requisição para API Gemini com tentativas
+        async function fetchGeminiComRetry(payload, tentativas = 5) {
+            const apiKey = ""; 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const delays = [1000, 2000, 4000, 8000, 16000];
+
+            for (let i = 0; i < tentativas; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`Erro na API: ${response.status}`);
+                    return await response.json();
+                } catch (error) {
+                    if (i === tentativas - 1) throw error;
+                    await new Promise(resolve => setTimeout(resolve, delays[i]));
+                }
+            }
+        }
+
+        async function avaliarProva() {
+            const btn = document.getElementById('btn-avaliar');
+            const loading = document.getElementById('loading');
+            const erroApi = document.getElementById('erro-api');
+            
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            loading.classList.remove('hidden');
+            erroApi.classList.add('hidden');
+
+            let dadosPrompt = "";
+            questoesBase.forEach((q, i) => {
+                const resp = document.getElementById(`resp-${i}`).value.trim() || "Não respondida";
+                dadosPrompt += `Pergunta ${i + 1}: ${q}\nResposta do Aluno: ${resp}\n\n`;
+            });
+
+            const payload = {
+                contents: [{ parts: [{ text: dadosPrompt }] }],
+                systemInstruction: {
+                    parts: [{ text: "Você é um professor técnico avaliando uma prova de Java. Responda em JSON estrito contendo um array 'avaliacoes' na mesma ordem." }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            avaliacoes: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        status: { type: "STRING", enum: ["Correto", "Incorreto", "Parcial"] },
+                                        feedback: { type: "STRING", description: "Breve explicação do erro ou acerto." }
+                                    },
+                                    required: ["status", "feedback"]
+                                }
+                            }
+                        },
+                        required: ["avaliacoes"]
+                    }
+                }
+            };
+
+            try {
+                const result = await fetchGeminiComRetry(payload);
+                const textResult = result.candidates[0].content.parts[0].text;
+                const avaliacaoJson = JSON.parse(textResult);
+
+                exibirResultados(avaliacaoJson.avaliacoes);
+            } catch (error) {
+                erroApi.textContent = "Erro ao comunicar com a IA. Tente novamente mais tarde.";
+                erroApi.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+                loading.classList.add('hidden');
+            }
+        }
+
+        function exibirResultados(avaliacoes) {
+            avaliacoes.forEach((aval, i) => {
+                const feedbackDiv = document.getElementById(`feedback-${i}`);
+                feedbackDiv.className = "mt-4 p-3 rounded text-sm font-medium border"; 
+                
+                if (aval.status === "Correto") {
+                    feedbackDiv.classList.add('bg-green-100', 'dark:bg-green-900/50', 'border-green-400', 'text-green-800', 'dark:text-green-300');
+                } else if (aval.status === "Incorreto") {
+                    feedbackDiv.classList.add('bg-red-100', 'dark:bg-red-900/50', 'border-red-400', 'text-red-800', 'dark:text-red-300');
+                } else {
+                    feedbackDiv.classList.add('bg-yellow-100', 'dark:bg-yellow-900/50', 'border-yellow-400', 'text-yellow-800', 'dark:text-yellow-300');
+                }
+
+                feedbackDiv.innerHTML = `<strong>Status:</strong> ${aval.status}<br><strong>Feedback:</strong> ${aval.feedback}`;
+            });
+        }
+
+        window.onload = renderizarProva;
+    </script>
+</body>
+</html>
